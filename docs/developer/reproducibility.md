@@ -88,3 +88,24 @@ Here are a few other obstacles that we need to overcome:
   ./diffoci diff podman://<new_image_tag> podman://<old_image_tag> \
       --ignore-timestamps --ignore-image-name --verbose
   ```
+
+### Updating the image
+
+The fact that our image is reproducible also means that it's frozen in time.
+This means that rebuilding the image without updating our Dockerfile will not
+receive security updates.
+
+We list the necessary variables that make up our image in the `Dockerfile.env`
+file. These are:
+* `DEBIAN_IMAGE_DATE`: The date that the Debian container image was released
+* `DEBIAN_ARCHIVE_DATE`: The Debian snapshot repo that we want to use
+* `GVISOR_ARCHIVE_DATE`: The gVisor APT repo that we want to use
+* `H2ORESTART_CHECKSUM`: The SHA-256 checksum of the H2ORestart plugin
+* `H2ORESTART_VERSION`: The version of the H2ORestart plugin
+
+If you bump these values in `Dockerfile.env`, you can create a new Dockerfile
+with:
+
+```
+poetry run jinja2 Dockerfile.in Dockerfile.env > Dockerfile
+```
