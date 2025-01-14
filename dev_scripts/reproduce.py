@@ -25,7 +25,6 @@ def run(*args):
         args,
         check=True,
         stdout=subprocess.PIPE,
-        # stderr=subprocess.PIPE
     ).stdout
 
 
