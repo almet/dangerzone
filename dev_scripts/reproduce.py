@@ -39,15 +39,27 @@ def git_verify(commit, source):
         )
 
 
+def diffoci_hash_matches(diffoci):
+    """Check if the hash of the downloaded diffoci bin matches the expected one."""
+    m = hashlib.sha256()
+    m.update(DIFFOCI_PATH.open().read())
+    diffoci_checksum = m.hexdigest()
+    return diffoci_checksum == DIFFOCI_CHECKSUM
+
+
+def diffoci_exists():
+    """Check if the diffoci helper exists, and if the hash matches."""
+    if not DIFFOCI_PATH.exists():
+        return False
+    return diffoci_hash_matches(DIFFOCI_PATH.open().read())
+
+
 def diffoci_download():
     """Download the diffoci tool, based on a URL and its checksum."""
     with urllib.request.urlopen(DIFFOCI_URL) as f:
         diffoci_bin = f.read()
 
-    m = hashlib.sha256()
-    m.update(diffoci_bin)
-    diffoci_checksum = m.hexdigest()
-    if not diffoci_checksum == DIFFOCI_CHECKSUM:
+    if not diffoci_hash_matches(diffoci_bin):
         raise ValueError(
             "Unexpected checksum for downloaded diffoci binary:"
             f" {diffoci_checksum} !={DIFFOCI_CHECKSUM}"
@@ -122,7 +134,7 @@ def main():
     commit = git_commit_get()
     git_verify(commit, args.source)
 
-    if not DIFFOCI_PATH.exists():
+    if diffoci_exists():
         logger.info(f"Downloading diffoci helper from {DIFFOCI_URL}")
         diffoci_download()
 
