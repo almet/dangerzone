@@ -498,5 +498,4 @@ jobs:
 
       - name: Reproduce the same container image
         run: |
-          podman load -i share/container.tar.gz
           ./dev_scripts/reproduce.py --source podman://dangerzone.rocks/dangerzone:$(cat share/image-id.txt)
