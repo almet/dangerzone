@@ -52,11 +52,14 @@ RUN mkdir /libreoffice_ext && cd libreoffice_ext \
     && rm /root/.wget-hsts
 
 # Create an unprivileged user both for gVisor and for running Dangerzone.
-RUN mkdir -p /opt/dangerzone/dangerzone && \
-  touch /opt/dangerzone/dangerzone/__init__.py && \
-  addgroup --gid 1000 dangerzone && \
-  adduser --uid 1000 --ingroup dangerzone --shell /bin/true \
-      --disabled-password --home /home/dangerzone dangerzone
+RUN addgroup --gid 1000 dangerzone
+RUN adduser --uid 1000 --ingroup dangerzone --shell /bin/true \
+    --disabled-password --home /home/dangerzone dangerzone
+
+# Copy Dangerzone's conversion logic under /opt/dangerzone, and allow Python to
+# import it.
+RUN mkdir -p /opt/dangerzone/dangerzone
+RUN touch /opt/dangerzone/dangerzone/__init__.py
 
 COPY conversion/doc_to_pixels.py \
     conversion/common.py \
