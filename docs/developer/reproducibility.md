@@ -103,7 +103,7 @@ file. These are:
 * `H2ORESTART_CHECKSUM`: The SHA-256 checksum of the H2ORestart plugin
 * `H2ORESTART_VERSION`: The version of the H2ORestart plugin
 
-If you bump these values in `Dockerfile.env`, you can create a new Dockerfile
+If you update these values in `Dockerfile.env`, you can create a new Dockerfile
 with:
 
 ```
