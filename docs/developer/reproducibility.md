@@ -92,7 +92,7 @@ Here are a few other obstacles that we need to overcome:
 ### Updating the image
 
 The fact that our image is reproducible also means that it's frozen in time.
-This means that rebuilding the image without updating our Dockerfile will not
+This means that rebuilding the image without updating our Dockerfile will **not**
 receive security updates.
 
 We list the necessary variables that make up our image in the `Dockerfile.env`
