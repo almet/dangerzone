@@ -109,3 +109,17 @@ with:
 ```
 poetry run jinja2 Dockerfile.in Dockerfile.env > Dockerfile
 ```
+
+### Reproducing the image
+
+For a simple way to reproduce a Dangerzone container image, either local or
+pushed to a container registry, you can run the following command in a Linux
+environment:
+
+```
+./dev_scripts/reproduce.py <image>
+```
+
+This command will download the `diffoci` helper, build a container image from
+the current Git commit, and ensure that the built image matches the source one,
+with the exception of image names and file timestamps.

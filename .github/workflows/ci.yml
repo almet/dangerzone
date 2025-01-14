@@ -471,3 +471,41 @@ jobs:
           #     file successfully.
           xvfb-run -s '-ac' ./dev_scripts/env.py --distro ${{ matrix.distro }} --version ${{ matrix.version }} run --dev \
               bash -c 'cd dangerzone; poetry run make test'
+
+  reproduce-image:
+    needs:
+      - build-container-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dev. dependencies
+        run: |-
+          sudo apt-get update
+          sudo apt-get install -y git python3-poetry --no-install-recommends
+          poetry install --only package
+
+      - name: Verify that the Dockerfile matches the commited template and params
+        run: |-
+          poetry run jinja2 Dockerfile.in Dockerfile.env > out
+          diff Dockerfile out
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Restore container cache
+        uses: actions/cache/restore@v4
+        with:
+          key: v3-${{ steps.date.outputs.date }}-${{ hashFiles('Dockerfile', 'dangerzone/conversion/*.py', 'dangerzone/container/*', 'install/common/build-image.py') }}
+          path: |-
+            share/container.tar.gz
+            share/image-id.txt
+          fail-on-cache-miss: true
+
+      - name: Reproduce the same container image
+        run: |
+          podman load -i share/container.tar.gz
+          ./dev_scripts/reproduce.py --source podman://dangerzone.rocks/dangerzone:$(cat share/image-id.txt)
