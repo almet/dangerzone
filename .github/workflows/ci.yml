@@ -472,7 +472,7 @@ jobs:
           xvfb-run -s '-ac' ./dev_scripts/env.py --distro ${{ matrix.distro }} --version ${{ matrix.version }} run --dev \
               bash -c 'cd dangerzone; poetry run make test'
 
-  reproduce-image:
+  check-reproducibility:
     needs:
       - build-container-image
     runs-on: ubuntu-latest
