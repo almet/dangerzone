@@ -492,18 +492,9 @@ jobs:
           poetry run jinja2 Dockerfile.in Dockerfile.env > out
           diff Dockerfile out
 
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-
-      - name: Restore container cache
-        uses: actions/cache/restore@v4
-        with:
-          key: v3-${{ steps.date.outputs.date }}-${{ hashFiles('Dockerfile', 'dangerzone/conversion/*.py', 'dangerzone/container/*', 'install/common/build-image.py') }}
-          path: |-
-            share/container.tar.gz
-            share/image-id.txt
-          fail-on-cache-miss: true
+      - name: Build Dangerzone container image
+        run: |
+          python3 ./install/common/build-image.py --no-save
 
       - name: Reproduce the same container image
         run: |

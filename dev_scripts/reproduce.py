@@ -36,7 +36,7 @@ def git_commit_get():
 def git_verify(commit, source):
     if not commit in source:
         raise RuntimeError(
-            f"Image '{image}' does not seem to be built from commit '{commit}'"
+            f"Image '{source}' does not seem to be built from commit '{commit}'"
         )
 
 
