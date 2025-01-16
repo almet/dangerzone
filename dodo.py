@@ -54,7 +54,7 @@ TESSDATA_TARGETS = list_language_data()
 IMAGE_DEPS = [
     "Dockerfile",
     *list_files("dangerzone/conversion"),
-    *list_files("dangerzone/container"),
+    *list_files("dangerzone/container_helpers"),
     "install/common/build-image.py",
 ]
 IMAGE_TARGETS = ["share/container.tar.gz", "share/image-id.txt"]

@@ -19,8 +19,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN \
   --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=bind,source=./container/repro-sources-list.sh,target=/usr/local/bin/repro-sources-list.sh \
-  --mount=type=bind,source=./container/gvisor.key,target=/tmp/gvisor.key \
+  --mount=type=bind,source=./container_helpers/repro-sources-list.sh,target=/usr/local/bin/repro-sources-list.sh \
+  --mount=type=bind,source=./container_helpers/gvisor.key,target=/tmp/gvisor.key \
   : "Hacky way to set a date for the Debian snapshot repos" && \
   touch -d ${DEBIAN_ARCHIVE_DATE} /etc/apt/sources.list.d/debian.sources && \
   touch -d ${DEBIAN_ARCHIVE_DATE} /etc/apt/sources.list && \
