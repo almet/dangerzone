@@ -61,11 +61,8 @@ RUN adduser --uid 1000 --ingroup dangerzone --shell /bin/true \
 RUN mkdir -p /opt/dangerzone/dangerzone
 RUN touch /opt/dangerzone/dangerzone/__init__.py
 
-COPY conversion/doc_to_pixels.py \
-    conversion/common.py \
-    conversion/errors.py \
-    conversion/__init__.py \
-    /opt/dangerzone/dangerzone/conversion
+# Copy only the Python code, and not any produced .pyc files.
+COPY conversion/*.py /opt/dangerzone/dangerzone/conversion
 
 # Let the entrypoint script write the OCI config for the inner container under
 # /config.json.
