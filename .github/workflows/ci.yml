@@ -473,8 +473,6 @@ jobs:
               bash -c 'cd dangerzone; poetry run make test'
 
   check-reproducibility:
-    needs:
-      - build-container-image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
