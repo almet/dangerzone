@@ -487,8 +487,9 @@ jobs:
 
       - name: Verify that the Dockerfile matches the commited template and params
         run: |-
-          poetry run jinja2 Dockerfile.in Dockerfile.env > out
-          diff Dockerfile out
+          cp Dockerfile Dockerfile.orig
+          make Dockerfile
+          diff Dockerfile.orig Dockerfile
 
       - name: Build Dangerzone container image
         run: |

@@ -26,7 +26,7 @@ jobs:
         run: |
           date=$(date "+%Y%m%d")
           sed -i "s/DEBIAN_ARCHIVE_DATE=[0-9]\+/DEBIAN_ARCHIVE_DATE=${date}/" Dockerfile.env
-          poetry run jinja2 Dockerfile.in Dockerfile.env > Dockerfile
+          make Dockerfile
       - name: Build container image
         run: python3 ./install/common/build-image.py --runtime docker --no-save
       - name: Get image tag

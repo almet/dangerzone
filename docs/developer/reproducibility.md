@@ -37,7 +37,7 @@ If you update these values in `Dockerfile.env`, you must also create a new
 Dockerfile with:
 
 ```
-poetry run jinja2 Dockerfile.in Dockerfile.env > Dockerfile
+make Dockerfile
 ```
 
 Updating `Dockerfile` without bumping `Dockerfile.in` is detected and should
