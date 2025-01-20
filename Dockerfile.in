@@ -76,6 +76,6 @@ USER dangerzone
 # store the state of its containers.
 RUN mkdir /home/dangerzone/.containers
 
-COPY container/entrypoint.py /
+COPY container_helpers/entrypoint.py /
 
 ENTRYPOINT ["/entrypoint.py"]
