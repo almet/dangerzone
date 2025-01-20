@@ -47,8 +47,13 @@ def diffoci_hash_matches(diffoci):
     return diffoci_checksum == DIFFOCI_CHECKSUM
 
 
-def diffoci_exists():
-    """Check if the diffoci helper exists, and if the hash matches."""
+def diffoci_is_installed():
+    """Determine if diffoci has been installed.
+
+    Determine if diffoci has been installed, by checking if the binary exists, and if
+    its hash is the expected one. If the binary exists but the hash is different, then
+    this is a sign that we need to update the local diffoci binary.
+    """
     if not DIFFOCI_PATH.exists():
         return False
     return diffoci_hash_matches(DIFFOCI_PATH.open().read())
@@ -134,7 +139,7 @@ def main():
     commit = git_commit_get()
     git_verify(commit, args.source)
 
-    if diffoci_exists():
+    if not diffoci_is_installed():
         logger.info(f"Downloading diffoci helper from {DIFFOCI_URL}")
         diffoci_download()
 
