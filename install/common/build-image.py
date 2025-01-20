@@ -27,7 +27,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
-def determine_tag():
+def determine_git_tag():
     # Designate a unique tag for this image, depending on the Git commit it was created
     # from:
     # 1. If created from a Git tag (e.g., 0.8.0), the image tag will be `0.8.0`.
@@ -90,7 +90,7 @@ def main():
 
     print(f"Building for architecture '{ARCH}'")
 
-    tag = args.tag or determine_tag()
+    tag = args.tag or determine_git_tag()
     image_name_tagged = IMAGE_NAME + ":" + tag
 
     print(f"Will tag the container image as '{image_name_tagged}'")
