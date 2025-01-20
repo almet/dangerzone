@@ -42,7 +42,7 @@ def git_verify(commit, source):
 def diffoci_hash_matches(diffoci):
     """Check if the hash of the downloaded diffoci bin matches the expected one."""
     m = hashlib.sha256()
-    m.update(DIFFOCI_PATH.open().read())
+    m.update(diffoci)
     diffoci_checksum = m.hexdigest()
     return diffoci_checksum == DIFFOCI_CHECKSUM
 
@@ -56,7 +56,7 @@ def diffoci_is_installed():
     """
     if not DIFFOCI_PATH.exists():
         return False
-    return diffoci_hash_matches(DIFFOCI_PATH.open().read())
+    return diffoci_hash_matches(DIFFOCI_PATH.open("rb").read())
 
 
 def diffoci_download():
