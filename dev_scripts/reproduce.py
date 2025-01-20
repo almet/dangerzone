@@ -84,8 +84,7 @@ def diffoci_diff(source, local_target):
             "diff",
             source,
             target,
-            "--ignore-timestamps",
-            "--ignore-image-name",
+            "--semantic",
             "--verbose",
         )
     except subprocess.CalledProcessError as e:
