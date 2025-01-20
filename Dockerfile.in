@@ -62,7 +62,7 @@ RUN mkdir -p /opt/dangerzone/dangerzone
 RUN touch /opt/dangerzone/dangerzone/__init__.py
 
 # Copy only the Python code, and not any produced .pyc files.
-COPY conversion/*.py /opt/dangerzone/dangerzone/conversion
+COPY conversion/*.py /opt/dangerzone/dangerzone/conversion/
 
 # Let the entrypoint script write the OCI config for the inner container under
 # /config.json.
