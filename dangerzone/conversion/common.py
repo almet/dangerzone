@@ -4,7 +4,7 @@ import sys
 from abc import abstractmethod
 from typing import Callable, List, Optional, TextIO, Tuple
 
-DEFAULT_DPI = 150  # Pixels per inch
+DEFAULT_DPI = 150  # 150 Pixels per inch
 INT_BYTES = 2
 
 
