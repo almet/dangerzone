@@ -4,7 +4,7 @@ import platform
 import shutil
 import time
 import typing
-from typing import List
+from typing import Any, Generator, List
 from unittest.mock import MagicMock
 
 from pytest import MonkeyPatch, fixture
@@ -20,7 +20,7 @@ else:
     except ImportError:
         from PySide2 import QtCore, QtGui, QtWidgets
 
-from dangerzone import errors, settings, startup
+from dangerzone import container_utils, errors, settings, startup
 from dangerzone.document import Document
 from dangerzone.gui import MainWindow
 from dangerzone.gui import main_window as main_window_module
@@ -124,8 +124,30 @@ def create_main_window(
 
 
 @fixture
-def window(qtbot: QtBot, mocker: MockerFixture, tmp_path: pathlib.Path) -> MainWindow:
-    return create_main_window(qtbot, mocker, tmp_path)
+def window(
+    qtbot: QtBot, mocker: MockerFixture, tmp_path: pathlib.Path
+) -> Generator[MainWindow, Any, Any]:
+    window = create_main_window(qtbot, mocker, tmp_path)
+    yield window
+
+    # FIXME: There's something in pytest that:
+    #
+    # 1. calls the `.closeEvent()` method of the `MainWindow` fixture, and
+    # 2. does not respect the `.ignore()` method of the event, and closes immediately
+    #
+    # Because we spawn a thread to perform the shutdown tasks, and no one waits this
+    # thread, this chain of events leads to the following behavior:
+    #
+    #   PASSED
+    #
+    #   =============== 1 passed in 3.18s ==================
+    #   QThread: Destroyed while thread '' is still running
+    #   Aborted (core dumped)
+    #
+    # It looks like `QtBot` is the culprit, but I haven't found a better way to affect
+    # it's behavior. In order to circumvent it, we can eagerly wait for the shutdown
+    # thread to finish, which is not pretty nor stable, but works for now.
+    window.shutdown_thread.wait()
 
 
 def test_default_menu(
@@ -605,27 +627,42 @@ def test_installation_failure_exception(
     assert "Error during install" in window.log_window.traceback_widget.toPlainText()
 
 
-def test_close_event_stops_podman_machine(
+def test_close_event(
     qtbot: QtBot,
     mocker: MockerFixture,
     dummy: MagicMock,
     window: MainWindow,
 ) -> None:
-    """Test that the Podman machine is stopped on closeEvent."""
-    # Mock the platform to be Windows or Darwin
-    mocker.patch("platform.system", return_value="Windows")
+    """Test that Dangerzone shuts down normally on closeEvent."""
+    container_name = f"{container_utils.CONTAINER_PREFIX}test"
+    # Mock Podman machine manager
     mock_podman_machine_manager = mocker.patch(
-        "dangerzone.gui.main_window.PodmanMachineManager"
+        "dangerzone.shutdown.PodmanMachineManager"
     )
-    # Mock the PodmanMachineManager
-    mocker.patch("platform.system", return_value="Windows")
-    # Mock the alert so that we can close the window
+    # Mock the functions necessary to kill a container.
+    mock_list_containers = mocker.patch(
+        "dangerzone.container_utils.list_containers",
+        return_value=[container_name],
+    )
+    mock_kill_container = mocker.patch(
+        "dangerzone.container_utils.kill_container",
+    )
+    # Mock the alert so that we can close the window.
     mock_alert = mocker.patch("dangerzone.gui.main_window.Alert")
+    # Mock the exit method of the main window.
+    mock_exit_spy = mocker.spy(window.dangerzone.app, "exit")
 
     window.close()
+    qtbot.waitUntil(mock_exit_spy.assert_called_once)
+    window.shutdown_thread.wait()
 
-    mock_podman_machine_manager().stop.assert_called_once()
     mock_alert.assert_called_once()
+    if platform.system() != "Linux":
+        mock_podman_machine_manager().stop.assert_called_once()
+    else:
+        mock_podman_machine_manager().stop.assert_not_called()
+    mock_list_containers.assert_called_once()
+    mock_kill_container.assert_called_once_with(container_name)
 
 
 def test_user_prompts(qtbot: QtBot, window: MainWindow, mocker: MockerFixture) -> None:
@@ -696,10 +733,10 @@ def test_machine_stop_others_user_input(
     mock_podman_machine_manager = mocker.patch(
         "dangerzone.startup.PodmanMachineManager"
     )
-    mocker.patch("dangerzone.gui.main_window.PodmanMachineManager")
     mock_podman_machine_manager.return_value.list_other_running_machines.return_value = [
         "other_machine"
     ]
+    mocker.patch("dangerzone.shutdown.PodmanMachineManager")
     mock_stop = mocker.patch("dangerzone.startup.MachineStopOthersTask.run")
     mock_fail = mocker.patch("dangerzone.startup.MachineStopOthersTask.fail")
 
@@ -740,11 +777,12 @@ def test_machine_stop_others_user_input(
     exit_spy = mocker.spy(window.dangerzone.app, "exit")
 
     window.startup_thread.start()
-    qtbot.waitUntil(handle_needs_user_input_stop_others_spy.assert_called_once)
+    qtbot.waitUntil(exit_spy.assert_called_once)
     window.startup_thread.wait()
 
+    handle_needs_user_input_stop_others_spy.assert_called_once()
     mock_alert.assert_called_once()
     mock_stop.assert_not_called()
     assert window.dangerzone.settings.get("stop_other_podman_machines") == "never"
-    exit_spy.assert_called_once_with(1)
+    exit_spy.assert_called_once_with(2)
     mock_fail.assert_called_once()
