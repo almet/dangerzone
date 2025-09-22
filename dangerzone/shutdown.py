@@ -41,3 +41,7 @@ class ShutdownMixin:
 
     def handle_success_custom(self) -> None:
         logger.info("Dangerzone's shutdown tasks have finished successfully")
+
+
+class ShutdownLogic(startup.Runner, ShutdownMixin):
+    pass
