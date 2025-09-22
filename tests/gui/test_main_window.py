@@ -786,3 +786,80 @@ def test_machine_stop_others_user_input(
     assert window.dangerzone.settings.get("stop_other_podman_machines") == "never"
     exit_spy.assert_called_once_with(2)
     mock_fail.assert_called_once()
+
+
+class TestShutdown:
+    def test_begin_shutdown_no_install_required(
+        self, qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+    ) -> None:
+        """Test that shutdown is immediate if no container runtime is used."""
+        mocker.patch.object(
+            window.dangerzone.isolation_provider, "requires_install", return_value=False
+        )
+        mock_exit = mocker.spy(window, "exit")
+        mock_shutdown_thread = mocker.patch("dangerzone.gui.shutdown.ShutdownThread")
+
+        window.begin_shutdown(0)
+
+        mock_exit.assert_called_once_with(0)
+        mock_shutdown_thread.assert_not_called()
+
+    def test_shutdown_thread_signals(
+        self, qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+    ) -> None:
+        """Test that the GUI is correctly updated during shutdown."""
+        mocker.patch.object(
+            window.dangerzone.isolation_provider, "requires_install", return_value=True
+        )
+        mock_exit = mocker.spy(window, "exit")
+
+        # Mock the tasks
+        mock_container_stop = mocker.patch("dangerzone.gui.shutdown.ContainerStopTask")
+        mock_machine_stop = mocker.patch("dangerzone.gui.shutdown.MachineStopTask")
+
+        # Mock status bar updates
+        handle_shutdown_begin_spy = mocker.spy(
+            window.status_bar, "handle_shutdown_begin"
+        )
+        handle_task_container_stop_spy = mocker.spy(
+            window.status_bar, "handle_task_container_stop"
+        )
+        handle_task_machine_stop_spy = mocker.spy(
+            window.status_bar, "handle_task_machine_stop"
+        )
+
+        window.begin_shutdown(0)
+
+        qtbot.waitUntil(mock_exit.assert_called_once)
+
+        handle_shutdown_begin_spy.assert_called_once()
+        handle_task_container_stop_spy.assert_called_once()
+        handle_task_machine_stop_spy.assert_called_once()
+        mock_exit.assert_called_once_with(0)
+
+    def test_shutdown_with_active_conversion(
+        self, qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+    ) -> None:
+        """Test that the user is prompted before quitting during a conversion."""
+        # Mock that there is a conversion in progress
+        mocker.patch.object(
+            window.dangerzone,
+            "get_converting_documents",
+            return_value=[mocker.MagicMock()],
+        )
+        mock_alert = mocker.patch("dangerzone.gui.main_window.Alert")
+        mock_begin_shutdown = mocker.spy(window, "begin_shutdown")
+
+        # Simulate user rejecting the exit
+        mock_alert.return_value.launch.return_value = False
+        event = QtGui.QCloseEvent()
+        window.closeEvent(event)
+        assert event.isAccepted() is False
+        mock_begin_shutdown.assert_not_called()
+
+        # Simulate user accepting the exit
+        mock_alert.return_value.launch.return_value = True
+        event = QtGui.QCloseEvent()
+        window.closeEvent(event)
+        assert event.isAccepted() is False  # Ignored because shutdown thread takes over
+        mock_begin_shutdown.assert_called_once_with(2)
