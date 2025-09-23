@@ -86,3 +86,5 @@ Dangerzone gets updates to improve its features _and_ to fix problems. So, updat
 ### Can I use Podman Desktop?
 
 Yes! We've introduced [experimental support for Podman Desktop](https://github.com/freedomofpress/dangerzone/blob/main/docs/podman-desktop.md) on Windows and macOS.
+
+Just generating something new
